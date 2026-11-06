@@ -7,3 +7,4 @@ extensions, which can easily be installed through pip:
 - furo
 - sphinx_subfigure
 - numpydoc
+- sphinx-exec-code

@@ -16,37 +16,39 @@ distribution's ``DEFAULT_PARAMETER_RANGES`` property.
 
 .. code-block::
 
+    import powerlaw
+
     data = powerlaw.load_test_dataset('blackouts')
 
-    pl = powerlaw.Power_Law(data)
+    # Uses default parameter ranges
+    pl = powerlaw.Fit(data)
 
 For a power law, the default parameter ranges are:
 
-.. code-block::
+.. exec_code::
 
-    powerlaw.Power_Law.DEFAULT_PARAMETER_RANGES
+    # --- hide: start ---
 
-.. code-block:: output
+    # Hide warnings from showing up.
+    import warnings
+    warnings.filterwarnings('ignore')
 
-    {'alpha': [0, 3]}
+    #hide:toggle
+
+    import powerlaw
+
+    print(powerlaw.Power_Law.DEFAULT_PARAMETER_RANGES)
 
 If you want to manually set this parameter range, you can easily do so:
 
 .. code-block::
 
-    # Some data that has an exponent between 3 and 4
+    # Some data that has an exponent between 1 and 1.5
     data = ...
 
-    pl = powerlaw.Power_Law(data, parameter_ranges={"alpha": [3, 4]})
+    pl = powerlaw.Fit(data, parameter_ranges={"alpha": [1, 1.5]})
 
-You can do the same thing with the ``Fit`` class:
-
-.. code-block::
-
-    # Some data that has an exponent between 3 and 4
-    data = ...
-
-    fit = powerlaw.Fit(data, parameter_ranges={"alpha": [3, 4]})
+You can do the same thing directly with a distribution class like ``powerlaw.Power_Law()``:
 
 Of course, this parameter range will only apply to distributions that have
 a parameter called ``"alpha"``; ``fit.exponential``, for example,
@@ -57,7 +59,7 @@ For a distribution with multiple parameters, the format is exactly the same:
 .. code-block::
 
     tpl = powerlaw.Truncated_Power_Law(data,
-                                       parameter_ranges={"alpha": [3, 4]}, "Lambda": [0, 7]})
+                                       parameter_ranges={"alpha": [1, 1.5]}, "Lambda": [1e-1, 1e-2]})
 
 
 Parameter constraints
@@ -106,7 +108,7 @@ And an inequality constraint might look something like this:
 You might be tempted to implement this functions exactly as they are
 above, for example:
 
-.. code-block::
+.. exec_code::
 
     def constraint(x1, x2):
         return x1 + x2 == 5
@@ -116,7 +118,7 @@ using boolean expressions like this, since it makes it very difficult for
 the minimizer to figure out how to satisfy the constraint. Instead you
 should set up this constraint like:
 
-.. code-block::
+.. exec_code::
 
     def constraint(x1, x2):
         return 5 - x2 - x1
@@ -135,7 +137,7 @@ by wrapping constraint functions within the ``Distribution`` class.
 .. code-block::
     
     def constraint(dist):
-        # Some computation with distribution properties/functions here.
+        # Some computation with distribution properties/functions here...
 
 As an example, let's assume that I want to create a constraint that requires
 that I always have at least ``N`` points while trying to find the optimal
@@ -148,7 +150,7 @@ This will be an inequality constraint, since I don't care if the number of
 points is exactly ``N``, but just that it should be larger than
 ``N``. I would implement that as:
 
-.. code-block::
+.. exec_code::
 
     def constraint(dist):
         # Some value
@@ -179,29 +181,38 @@ the specification just to show how it works.
 
 Let's first try our ``xmin`` fitting without the constraint:
 
-.. code-block::
+.. plot::
+   :caption: Results of ``xmin`` fitting for the ``blackouts`` dataset.
+   :filename-prefix: blackouts_xmin
 
-    data = powerlaw.load_test_dataset('blackouts')
+    import powerlaw
+    import matplotlib.pyplot as plt
 
-    fit = powerlaw.Fit(data / 1e3)
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
+    
+    fit = powerlaw.Fit(data)
 
     plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["distances"], label='KS distance')
     plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["valid_fits"], label='Is valid fit')
 
     plt.axvline(fit.xmin, linestyle='--', c='black', label='Optimal $x_{min}$')
 
-    ...
-
-.. figure:: ../images/blackouts_xmin.png
-
-    Results of ``xmin`` fitting for the ``blackouts`` dataset.
+    plt.xlabel('$x_{min}$')
+    plt.xscale('log')
+    plt.legend()
+    plt.show()
 
 Now let's apply our constraint:
 
-.. code-block::
+.. plot::
+   :caption: Results of ``xmin`` fitting for the ``blackouts`` dataset with a constraint on the number of data points.
+   :filename-prefix: blackouts_xmin_constrained
 
-    data = powerlaw.load_test_dataset('blackouts')
+    import powerlaw
+    import matplotlib.pyplot as plt
 
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
+    
     def constraint(dist):
         N = 100
         return len(dist.data) - N
@@ -210,19 +221,17 @@ Now let's apply our constraint:
                        "fun": constraint,
                        "dists": ['power_law']}
 
-    fit = powerlaw.Fit(data / 1e3, parameter_constraints=constraint_dict)
+    fit = powerlaw.Fit(data, parameter_constraints=constraint_dict)
 
     plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["distances"], label='KS distance')
     plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["valid_fits"], label='Is valid fit')
 
     plt.axvline(fit.xmin, linestyle='--', c='black', label='Optimal $x_{min}$')
 
-    ...
-
-.. figure:: ../images/blackouts_xmin_constrained.png
-
-    Results of ``xmin`` fitting for the ``blackouts`` dataset with a constraint
-    on the number of data points.
+    plt.xlabel('$x_{min}$')
+    plt.xscale('log')
+    plt.legend()
+    plt.show()
 
 Indeed we see that the optimal ``xmin`` value is different, since the previous
 one would have excluded too many data points to satisfy the constraint.

@@ -29,25 +29,57 @@ power law with the perfection of a theoretical distribution. Given enough
 data, an empirical dataset with any noise or imperfections will always fail
 a bootstrapping test for any theoretical distribution. If one keeps absolute
 adherence to the exact theoretical distribution, one can enter the tricky
-position of passing a bootstrapping test, but only with few enough data [2] 
+position of passing a bootstrapping test, but only with few enough data [2].
 
 Thus, it is generally more sound and useful to compare the fits of many
-candidate distributions, and identify which one fits the best. This is 
-easily done using ``powerlaw``:
+candidate distributions, and identify which one fits the best. The first step
+is often to compare various fits visually, which is easily done in ``powerlaw``:
 
-.. code-block::
+.. plot::
+    :caption: Comparison of the PDFs for power law and exponential fits for ``blackouts`` dataset.
+    :filename-prefix: blackouts_compare
+
+    import powerlaw
+    import matplotlib.pyplot as plt
 
     # Let's use the blackouts dataset 
-    data = powerlaw.load_test_dataset('blackouts')
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
 
     fit = powerlaw.Fit(data)
 
-    # Plot the data and two candidate distributions
-    fit.plot_pdf(label='Data')
-    fit.power_law.plot_pdf(label='Power law fit')
-    fit.exponential.plot_pdf(label='Exponential fit')
+    fit.plot_pdf(label='Data (PDF)')
+    fit.power_law.plot_pdf(linestyle='--', label='Power law fit (PDF)')
+    fit.exponential.plot_pdf(linestyle='--', label='Exponential fit (PDF)')
 
-    ...
+    plt.title('blackouts')
+    plt.legend()
+    plt.show()
+
+Next, we might do a quantitative comparison using the loglikelihood ratio of
+two candidate distributions, and the significance value of that ratio.
+
+.. exec_code::
+
+    # --- hide: start ---
+    # Hide warnings from showing up.
+    import warnings
+    warnings.filterwarnings('ignore')
+    # --- hide: stop ---
+
+    import powerlaw
+
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
+
+    # --- hide: start ---
+    # Hide the version with the hidden progress bar, since we don't want
+    # that info to show up in the output, but we also want users to be
+    # able to see it when they run it themselves.
+    fit = powerlaw.Fit(data, verbose=0)
+    # --- hide: stop ---
+
+    # --- skip: start ---
+    fit = powerlaw.Fit(data)
+    # --- skip: stop ---
 
     # See which distribution fits the data better
     R, p = fit.distribution_compare('power_law', 'exponential',
@@ -55,24 +87,12 @@ easily done using ``powerlaw``:
 
     print(R, p)
 
-.. figure:: ../images/blackouts_compare.png
-
-    Comparison of the PDFs for power law and exponential fits for ``blackouts`` dataset.
-
-This function :meth:`Fit.distribution_compare` gives us two values back:
-the loglikelihood ratio of the two distributions, and the significance 
-value of that ratio. For this case, those values are:
-
-.. code-block:: output
-
-    (1.4314804849576281, 0.15229255604426545)
-
-Since the ratio is positive, that means that the result of the test may support
+Since the ratio (first value, ``R``) is positive, that means that the result of the test may support
 the first distribution (power law) over the second distribution (exponential).
 If the value were negative, we would have the opposite possibility.
 To tell if the test actually supports one distribution over
 the other, we look at the magnitude of the ratio, or even better, at the
-significance level. In this particular case, we have a pretty large
+significance level (second value, ``p``). In this particular case, we have a pretty large
 p value, and using most standard choices of significance level -- usually
 :math:`0.01` or :math:`0.05` --- we would fail to reject the null hypothesis.
 That is, the power law distribution is not vastly better than the exponential,
@@ -82,7 +102,7 @@ think about gathering more data in order to say more confidently whether this is
 a power law or not.
 
 The exponential is often the first alternative distribution one should check
-when looking at heavy tailed data. The reason is definitional: the typical
+when looking at heavy tailed data. This is because the typical
 quantitative definition of a "heavy-tail" is that it is `not` exponentially
 bounded [3]. Thus if a power law is not a better fit than an exponential
 distribution (as in the above example) there is scarce ground for considering
@@ -90,14 +110,52 @@ the distribution to be heavy-tailed at all, let alone a power law.
 
 Let's look at another example: the ``words`` dataset.
 
-.. code-block::
+.. plot::
+    :caption: Comparison of the PDFs for power law and exponential fits for ``words`` dataset.
+    :filename-prefix: words_compare
+    :include-source: False
 
-    data = powerlaw.load_test_dataset('word')
+    import powerlaw
+    import matplotlib.pyplot as plt
+
+    # Let's use the words dataset 
+    data = powerlaw.load_test_dataset('words')
 
     # Remember this is a discrete dataset
     fit = powerlaw.Fit(data, discrete=True)
 
-    ...
+    fit.plot_pdf(label='Data (PDF)')
+    fit.power_law.plot_pdf(linestyle='--', label='Power law fit (PDF)')
+    fit.exponential.plot_pdf(linestyle='--', label='Exponential fit (PDF)')
+
+    plt.title('words')
+    plt.ylim([1e-10, 1e1])
+    plt.legend()
+    plt.show()
+
+.. exec_code::
+
+    # --- hide: start ---
+    # Hide warnings from showing up.
+    import warnings
+    warnings.filterwarnings('ignore')
+    # --- hide: stop ---
+
+    import powerlaw
+
+    data = powerlaw.load_test_dataset('words')
+
+    # --- hide: start ---
+    # Hide the version with the hidden progress bar, since we don't want
+    # that info to show up in the output, but we also want users to be
+    # able to see it when they run it themselves.
+    fit = powerlaw.Fit(data, discrete=True, verbose=0)
+    # --- hide: stop ---
+
+    # --- skip: start ---
+    # Remember this is a discrete dataset
+    fit = powerlaw.Fit(data, discrete=True)
+    # --- skip: stop ---
 
     # See which distribution fits the data better
     R, p = fit.distribution_compare('power_law', 'exponential',
@@ -105,18 +163,9 @@ Let's look at another example: the ``words`` dataset.
 
     print(R, p)
 
-.. figure:: ../images/words_compare.png
-
-    Comparison of the PDFs for power law and exponential fits for ``words`` dataset.
-
 It's pretty clear from the plot that the power law is a much better fit
-than an exponential for this distribution; indeed the log likelihood
-comparison agrees:
-
-.. code-block:: output
-
-    (9.135914718777004, 6.485614241379349e-20)
-
+than an exponential for this distribution, and indeed the log likelihood
+comparison agrees.
 Since our p value is (much) smaller than any reasonable significance value,
 we have pretty strong evidence that this distribution follows a power law
 much more than an exponential. 
@@ -153,7 +202,51 @@ heavy-tailed. If the generative mechanism for the lognormal is plausible
 for the domain, the lognormal is frequently just as good a fit as the power
 law, if not better. Let's compare the two for the ``words`` dataset.
 
-.. code-block::
+.. plot::
+    :caption: Comparison of the PDFs for power law and lognormal fits for ``words`` dataset.
+    :filename-prefix: words_compare_lognormal
+    :include-source: False
+
+    import powerlaw
+    import matplotlib.pyplot as plt
+
+    # Let's use the words dataset 
+    data = powerlaw.load_test_dataset('words')
+
+    # Remember this is a discrete dataset
+    fit = powerlaw.Fit(data, discrete=True)
+
+    fit.plot_pdf(label='Data (PDF)')
+    fit.power_law.plot_pdf(linestyle='--', label='Power law fit (PDF)')
+    fit.lognormal.plot_pdf(linestyle='--', label='Lognormal fit (PDF)')
+
+    plt.title('words')
+    plt.legend()
+    plt.show()
+
+.. exec_code::
+
+    # --- hide: start ---
+    # Hide warnings from showing up.
+    import warnings
+    warnings.filterwarnings('ignore')
+    # --- hide: stop ---
+
+    import powerlaw
+
+    data = powerlaw.load_test_dataset('words')
+
+    # --- hide: start ---
+    # Hide the version with the hidden progress bar, since we don't want
+    # that info to show up in the output, but we also want users to be
+    # able to see it when they run it themselves.
+    fit = powerlaw.Fit(data, discrete=True, verbose=0)
+    # --- hide: stop ---
+
+    # --- skip: start ---
+    # Remember this is a discrete dataset
+    fit = powerlaw.Fit(data, discrete=True)
+    # --- skip: stop ---
 
     # See which distribution fits the data better
     R, p = fit.distribution_compare('power_law', 'lognormal',
@@ -161,17 +254,9 @@ law, if not better. Let's compare the two for the ``words`` dataset.
 
     print(R, p)
 
-.. code-block:: output
-    
-    (0.0636808247240506, 0.9492243734054262)
-
 Based on our distribution comparison, indeed there is no evidence to suggest
 that a lognormal distribution is better or worse than a power law for this
 data.
-
-.. figure:: ../images/words_compare_lognormal.png
-
-    Comparison of the CCDFs for power law and lognormal fits for ``words`` dataset.
 
 There are domains in which the power law distribution is a superior fit to
 the lognormal [eg. 2]. However, difficulties in distinguishing the power law
@@ -198,7 +283,7 @@ keyword in :meth:`powerlaw.Fit.distribution_compare` or
     # Specify whether the distributions are nested
     fit.distribution_compare(’power_law’, ’truncated_power_law’, nested=True)
     
-    # Default behavior; let powerlaw decide if they are nested based on name
+    # Default behavior; let powerlaw decide if they are nested
     fit.distribution_compare(’power_law’, ’truncated_power_law’)
 
 .. code-block::

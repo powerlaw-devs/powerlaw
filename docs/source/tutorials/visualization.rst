@@ -26,9 +26,12 @@ compute and visualize your data using the following functions:
 
 To plot the PDF and CDF of a dataset we might do:
 
-.. code-block::
+.. plot::
+    :caption: PDF, CDF, and CCDF for ``words`` dataset.
+    :filename-prefix: words_pdf_cdf_ccdf
 
     import powerlaw
+    import matplotlib.pyplot as plt
 
     data = powerlaw.load_test_dataset('words')
 
@@ -36,12 +39,10 @@ To plot the PDF and CDF of a dataset we might do:
     powerlaw.plot_pdf(data, label='PDF')
     powerlaw.plot_cdf(data, label='CDF')
     powerlaw.plot_ccdf(data, label='CCDF')
+
+    plt.title('words')
     plt.legend()
     plt.show()
-
-.. figure:: ../images/words_dists.png
-
-    PDF, CDF, and CCDF for ``words`` dataset.
 
 Note how when the PDF scales as a power law with some exponent :math:`\alpha`,
 the CCDF scales as :math:`\alpha - 1`.
@@ -60,26 +61,34 @@ with the ``linear_bins=True`` option to either :meth:`powerlaw.pdf` or
 
 Let's try it with the ``blackouts`` dataset:
 
-.. code-block::
+.. plot::
+    :caption: PDF for the ``blackouts`` dataset with logarithmic binning on a logarithmic scale (left), linear binning on a linear scale (middle), and linear binning on a logarithmic scale (right).
+    :filename-prefix: blackouts_binning_comparison
 
-    data = powerlaw.load_test_dataset('blackouts')
+    import powerlaw
+    import matplotlib.pyplot as plt
 
-    #powerlaw.plot_pdf(data, linear_bins=False, label='PDF')
-    powerlaw.plot_pdf(data, linear_bins=True, label='PDF')
-    plt.legend()
+    # Divide by 1e3 prefactor to give people in thousands
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
+
+    fig, ax = plt.subplots(1, 3, figsize=(12, 3.5))
+
+    # We can specify the specific axis we want to plot on for more
+    # complicated figures like this one.
+    powerlaw.plot_pdf(data, linear_bins=False, ax=ax[0])
+    ax[0].set_title('log bins, log scale')
+    ax[0].set_xscale('log')
+
+    powerlaw.plot_pdf(data, linear_bins=True, ax=ax[1])
+    ax[1].set_title('linear bins, linear scale')
+    ax[1].set_xscale('linear')
+
+    powerlaw.plot_pdf(data, linear_bins=True, ax=ax[2])
+    ax[2].set_title('linear bins, log scale')
+    ax[2].set_xscale('log')
+
+    fig.tight_layout()
     plt.show()
-
-.. subfigure:: ABC
-
-    .. image:: ../images/blackouts_pdf.png
-
-    .. image:: ../images/blackouts_pdf_linear.png
-
-    .. image:: ../images/blackouts_pdf_linear_log.png
-
-    PDF for the ``blackouts`` dataset with logarithmic binning on a logarithmic
-    scale (left), linear binning on a linear scale (middle), and linear binning
-    on a logarithmic scale (right).
 
 The ``blackouts`` data shows a particularly severe example of why linear
 binning can hurt visualization. The sparsity of the data leads individual
@@ -100,29 +109,30 @@ Individual ``Fit`` objects also include functions for computing and plotting
 all three distributions. The theoretical PDF, CDF, and CCDFs of the constituent
 ``Distribution`` objects inside the ``Fit`` can also be plotted.
 
-.. code-block::
+.. plot::
+    :caption: PDF for the ``fires`` dataset with power law and exponential fits.
+    :filename-prefix: fires_pdf_fit
+
+    import powerlaw
+    import matplotlib.pyplot as plt
 
     data = powerlaw.load_test_dataset('fires')
 
-    fit = powerlaw.Fit(data)
+    # verbose=0 hides a progress bar; by default it will show
+    fit = powerlaw.Fit(data, verbose=0)
 
     # Plot the distributions based on the data
     # No need to pass the data since the Fit already has it
     fit.plot_pdf(label='PDF')
 
-    # Plot some fits fit.power_law.plot_pdf(linestyle='--', label='Power law fit')
+    # Plot some fits
+    fit.power_law.plot_pdf(linestyle='--', label='Power law fit')
     fit.exponential.plot_pdf(linestyle='--', label='Exponential fit')
 
-    ...
-
-.. figure:: ../images/fires_pdf_and_fit.png
-
-    PDF for the ``fires`` dataset with power law and exponential fits.
+    plt.title('fires')
+    plt.legend()
+    plt.show()
 
 Just like how these functions will automatically read the data from the
 ``Fit`` class, they will also inherit values for ``xmin`` and ``xmax``,
 meaning only a portion of the data range may be shown.
-
-To send multiple plots to the same axis in more complicated cases than the
-ones above (where there only exists a single axis), pass the ``matplotlib.axes``
-object with the keyword ``ax``.

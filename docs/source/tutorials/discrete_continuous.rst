@@ -7,6 +7,8 @@ accurately fitted with continuous distributions [1]. Discrete (integer)
 distributions, with proper normalizing, can be dictated at initialization:
 
 .. code-block::
+    
+    import powerlaw
 
     # This is a continuous dataset
     data = powerlaw.load_test_dataset('quakes')
@@ -95,20 +97,59 @@ at the creation of the ``Fit`` object, or at each call of the function
 The fast estimation of random data has an error that scales with the
 :math:`x_{min}`. When :math:`x_{min} = 1` the error is over 8\%, but at
 :math:`x_{min} = 5` the error is less than 1\% and at :math:`x_{min} = 10`
-less than .2\% [1]. Thus, for distributions with small values of :math:`x_{min}`
+less than 0.2\% [1]. Thus, for distributions with small values of :math:`x_{min}`
 the exact calculation is likely preferred.  
 
-.. subfigure:: AB
+.. plot::
+    :caption: PDF for the ``words`` dataset compared to random data generated from this distribution using :meth:`Distribution.generate_random` for :math:`x_{min}` values of 1 (left) and 10 (right). The left plot shows a much larger difference between the estimated random data and the true data when compared to the right plot.
+    :filename-prefix: words_generation_xmin_comparison
+    :include-source: False
 
-    .. image:: ../images/words_generation_1_xmin.png
+    import powerlaw
+    import numpy as np
+    import matplotlib.pyplot as plt
 
-    .. image:: ../images/words_generation_10_xmin.png
+    np.random.seed(0)
+    num_samples = 10000
 
-    PDF for the ``words`` dataset compared to random data generated from
-    this distribution using :meth:`Distribution.generate_random` for
-    :math:`x_{min}` values of 1 (left) and 10 (right). The left plot
-    shows a much larger difference between the estimated random data and
-    the true data when compared to the right plot.
+    data = powerlaw.load_test_dataset('words')
+
+    fig, ax = plt.subplots(1, 2, figsize=(10, 4.5))
+
+    fit = powerlaw.Fit(data, xmin=1, xmax=1e5, discrete=True, estimate_discrete=True)
+    samples = fit.power_law.generate_random(size=num_samples)
+
+    fit.plot_pdf(label='Original data', ax=ax[0])
+
+    powerlaw.plot_pdf(samples, label='Sampled data \nestimate_discrete=True', ax=ax[0])
+
+    fit = powerlaw.Fit(data, xmin=1, xmax=1e5, discrete=True, estimate_discrete=False)
+    samples = fit.power_law.generate_random(size=num_samples)
+
+    powerlaw.plot_pdf(samples, label='Sampled data \nestimate_discrete=False', ax=ax[0])
+
+    ax[0].set_title('xmin = 1')
+    ax[0].legend(fontsize=12)
+
+    fit = powerlaw.Fit(data, xmin=10, xmax=1e5, discrete=True, estimate_discrete=True)
+    samples = fit.power_law.generate_random(size=num_samples)
+
+    fit.plot_pdf(label='Original data', ax=ax[1])
+
+    powerlaw.plot_pdf(samples, label='Sampled data \nestimate_discrete=True', ax=ax[1])
+
+    fit = powerlaw.Fit(data, xmin=10, xmax=1e5, discrete=True, estimate_discrete=False)
+    samples = fit.power_law.generate_random(size=num_samples)
+
+    powerlaw.plot_pdf(samples, label='Sampled data \nestimate_discrete=False', ax=ax[1])
+
+    ax[1].set_title('xmin = 10')
+    ax[1].legend(fontsize=12)
+
+    fig.suptitle('words')
+    fig.tight_layout()
+    plt.show()
+
 
 References
 ----------

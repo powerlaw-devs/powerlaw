@@ -7,7 +7,7 @@ this data should not be binned or anything prior to passing to any functions
 or classes.
 
 Loading data to be used in this package is very straight forward, since you
-only need a numpy array or python list:
+only need a numpy array or Python list:
 
 .. code-block::
 
@@ -16,14 +16,14 @@ only need a numpy array or python list:
 
     data = np.genfromtxt('some_data.csv')
 
-    # Now we can use any powerlaw function or class
-    fit = powerlaw.Fit(data=data, ...)
+    # Now we can use any powerlaw function or class, eg:
+    fit = powerlaw.Fit(data=data)
 
 If you want to explore the functionality provided by ``powerlaw`` but don't
 have your own data, you can load any of the test datasets using the
 :meth:`~powerlaw.load_test_dataset` method.
 
-.. code-block::
+.. exec_code::
     
     import powerlaw
 
@@ -87,9 +87,16 @@ using :meth:`powerlaw.print_test_datasets`:
     Most of these test files were copied from ``plfit`` which were in turn
     copied from ``agpy``, so I'm not sure of the original source.
 
-.. figure:: ../images/test_datasets.png
+You can see an overview of all of the datasets with:
 
-    PDF for all of the test datasets, generated with :meth:`powerlaw.plot_test_datasets`.
+.. plot::
+    :caption: PDFs for all of the test datasets, generated with :meth:`powerlaw.plot_test_datasets`.
+    :filename-prefix: test_datasets
+    
+    import powerlaw
+
+    powerlaw.plot_test_datasets()
+
 
 References
 ----------

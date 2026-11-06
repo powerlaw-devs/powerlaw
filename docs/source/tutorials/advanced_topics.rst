@@ -4,48 +4,6 @@ Advanced Topics
 This page covers many eclectic topics that don't fit elsewhere, and generally
 are only relevant for advanced users.
 
-No possible fits
-----------------
-
-When fitting a distribution to data, there may be no valid fits. This would
-most typically arise from overly strict fitting requirements, but it could
-also happen because the data truly doesn't fit the specified form. This
-latter case is easy enough to test (just look at the PDF of the data), but
-the former case can be a little harder to fix.
-
-First, in order to diagnose this issue, you should look at the ``noise_flag``
-property of either the ``Fit`` object (signifying that every value of ``xmin``
-failed) or for a specific distribution object.
-
-.. code-block::
-
-    data = powerlaw.load_test_dataset('blackouts')
-
-    # pl.noiseflag will be True since the powerlaw exponent of the
-    # blackouts dataset should be around 2.4, outside of the prescribed
-    # range.
-    pl = powerlaw.Power_Law(data, parameter_ranges={"alpha": [1, 2]})
-    pl.noise_flag
-
-    # fit.noiseflag will be True since the prescribed sigma_threshold
-    # is too low
-    # range.
-    fit = powerlaw.Fit(data, sigma_threshold=1e-12)
-    pl.noise_flag
-
-One way to fix this is by adjusting your parameter ranges, threshold, constraints,
-etc. If you worry that the fitting landscape is too noisy, you can try
-providing an explicit initial condition:
-
-.. code-block::
-    
-    fit = powerlaw.Fit(data, initial_parameters={"alpha": 2.4})
-
-If you're seeing a warning message about something, fixing that may help
-to get better fitting results; see the tutorial about `dealing with warnings
-<warnings.html>`_ for more information.
-
-
 Multiple possible fits
 ----------------------
 
@@ -65,45 +23,65 @@ parameters of the subsequent fit, in the ``xmin_fitting_results`` property.
 
 As an example, let's examine the fitting results for the ``blackouts`` data:
 
-.. code-block::
+.. plot::
+    :caption: The Kolmogorov-Smirnov (KS) distance and :math:`\alpha` values for the resulting fit for every possible value of :math:`x_{min}` for the ``blackouts`` data set.
+    :filename-prefix: blackouts_multiple_fits
 
-    data = powerlaw.load_test_dataset('blackouts')
+    import powerlaw
+    import matplotlib.pyplot as plt
 
-    fit = powerlaw.Fit(data / 1e3)
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
+
+    fit = powerlaw.Fit(data)
 
     # Now examine the xmin fitting results
-    plt.plot(fit.xmin_fitting_results["xmin"], fit.xmin_fitting_results["distance"])
+    plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["distances"], label='KS')
+    plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["alpha"], label='$\\alpha$')
+    plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["valid_fits"], label='Is valid fit?')
+
+    plt.axvline(fit.xmin, linestyle='--', c='black', label='Chosen $x_{min}$')
+
+    plt.xlabel('$x_{min}$')
+    plt.xscale('log')
+    plt.legend()
+    plt.show()
    
-.. figure:: ../images/blackouts_multiple_fits.png
 
-    The Kolmogorov-Smirnov distance and :math:`\alpha` values for the resulting fit for every possible
-    value of :math:`x_{min}` for the ``blackouts`` data set.
-
-The first minima is at :math:`x_{min} = 50`, and has a distance value of .1
-and an :math:`\alpha` value of 1.78. The second, more optimal, fit is at
-:math:`x_{min} = 230`, with a distance of .06 and :math:`\alpha = 2.27`.
+The first minima is at :math:`x_{min} = 50`, and has a KS distance of 0.1
+and :math:`\alpha \approx 1.7`. The second, more optimal, fit is at
+:math:`x_{min} = 230`, with a distance of 0.06 and :math:`\alpha \approx 2.3`.
 The reality of which of these is a better fit to the data will depend
 on exactly what type of data you have, and isn't always obvious if there
 are fits with similar distance values, as above.
 For example, if you expect that the power law exponent should be restricted
-to a specific range, say greater than 2, the second minima would be the
+to a specific range, say between 1 and 2, the first minima would be the
 most correct choice. If you have expectations about such values, it is
 a good idea to try and encode this in the parameter ranges or constraints
 of fitting.
 
-.. code-block::
+.. plot::
+    :caption: The Kolmogorov-Smirnov (KS) distance and :math:`\alpha` values for the resulting fit for every possible value of :math:`x_{min}` for the ``blackouts`` data set while constraining :math:`\alpha` to be in the range :math:`[1, 2]`.
+    :filename-prefix: blackouts_multiple_fits_bounded
 
-    data = powerlaw.load_test_dataset('blackouts')
+    import powerlaw
+    import matplotlib.pyplot as plt
 
-    fit = powerlaw.Fit(data / 1e3, parameter_ranges={"alpha": [2, 3]})
+    data = powerlaw.load_test_dataset('blackouts') / 1e3
 
-    ...
+    # Apply a range on the possible values of alpha
+    fit = powerlaw.Fit(data, parameter_ranges={"alpha": [1, 2]})
 
-.. figure:: ../images/blackouts_multiple_fits_bounded.png
+    # Now examine the xmin fitting results
+    plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["distances"], label='KS')
+    plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["alpha"], label='$\\alpha$')
+    plt.plot(fit.xmin_fitting_results["xmins"], fit.xmin_fitting_results["valid_fits"], label='Is valid fit?')
 
-    The Kolmogorov-Smirnov distance and :math:`\alpha` values for the resulting fit for every possible
-    value of :math:`x_{min}` for the ``blackouts`` data set while constraining
-    :math:`\alpha` to be in the range :math:`[2, 3]`.
+    plt.axvline(fit.xmin, linestyle='--', c='black', label='Chosen $x_{min}$')
+    
+    plt.xlabel('$x_{min}$')
+    plt.xscale('log')
+    plt.legend()
+    plt.show()
 
 For more information, see the tutorial about `restricting fits with ranges and
 constraints <ranges_and_constraints.html>`_.
@@ -197,7 +175,7 @@ in the normal way:
 
 .. code-block:: 
 
-    R, p = results.distribution_compare('power_law', 'lognormal_positive')
+    R, p = fit.distribution_compare('power_law', 'lognormal_positive')
 
 You may find that a lognormal where ``mu`` must be positive gives a much
 worse fit to your data, and that leaves the power law looking like the best

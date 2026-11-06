@@ -27,7 +27,10 @@ extensions = ['sphinx.ext.autodoc',
               'numpydoc',
               'sphinx.ext.autosummary',
               'sphinx_subfigure',
-              'sphinx.ext.githubpages']
+              'sphinx.ext.githubpages',
+              'sphinx_exec_code',
+              'matplotlib.sphinxext.plot_directive',
+             ]
 
 autodoc_default_options = {
     "members": True,
@@ -43,6 +46,24 @@ autoclass_content = 'both'
 #autosummary_generate = True
 
 numpydoc_class_members_toctree = False
+
+# Options for exec-code
+
+# Root directory is the working dir
+#exec_code_working_dir = '..'
+#exec_code_source_folders = ['../powerlaw']
+
+# Options for matplotlib plotting directive
+plot_include_source = True
+plot_pre_code = """
+# Suppress all warnings, mostly useful for stopping powerlaw warnings, not
+# mpl ones.
+import warnings
+warnings.filterwarnings('ignore')  
+"""
+plot_rcparams = {"figure.figsize": (4.5, 4.5),
+                 "figure.dpi": 150,
+                 "font.size": 12}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

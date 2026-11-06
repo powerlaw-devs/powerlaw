@@ -26,7 +26,7 @@ When creating a ``Fit`` object, this can be directly specified:
 If you don't have a particular value for :math:`x_{min}` in mind, ``powerlaw``
 implements the methods described in Clauset et al. (2009) to find this value.
 
-This is done by creating a power law fit starting from each unique value in
+This is done by creating a fit starting from each unique value in
 the dataset, and then selecting the one that results in the minimal distance
 between the data and the fit. This distance can be calculated according to
 different schemes, but the most common are:
@@ -46,7 +46,8 @@ called whenever you create a ``Fit`` object without specifying a value for
 
 By default, this will use the Kolmogorov-Smirnov distance as the evaluation
 metric, but this can be changed with the ``xmin_distance`` keyword argument
-to the ``Fit`` class.
+to the ``Fit`` class. The default distribution used in fitting is a power law,
+though this can be changed with the ``xmin_distribution`` keyword argument.
 
 Since this often involves fitting the data quite a lot, it is usually the
 most computationally expensive function call in the library. If you'd like
@@ -102,28 +103,31 @@ If one is given, any data above :math:`x_{max}` is ignored for fitting.
 Effects of upper and lower limits
 ---------------------------------
 
-
 For calculating or plotting CDFs, CCDFs, and PDFs, by default ``Fit`` objects
 only use data above :math:`x_{min}` and below :math:`x_{max}` (if present).
 The ``Fit`` object's plotting commands can plot all the data originally given
 to it with the keyword ``original_data=True``.
 
-.. code-block::
+.. plot::
+    :caption: PDF for the ``fires`` dataset within the specified scaling range ``[1e1, 1e4]`` and over the whole data range.
+    :filename-prefix: fires_cropped_pdf
+
+    import powerlaw
+    import matplotlib.pyplot as plt
 
     xmin = 10
     xmax = 1e4
+
+    data = powerlaw.load_test_dataset('fires')
 
     fit = powerlaw.Fit(data, xmin=xmin, xmax=xmax)
 
     fit.plot_pdf(label='Cropped PDF')
     fit.plot_pdf(original_data=True, label='Full PDF')
 
-    ...
-
-.. figure:: ../images/fires_pdf_cropped.png
-
-    PDF for the ``fires`` dataset within the specified scaling range 
-    ``[1e1, 1e4]`` and over the whole data range.
+    plt.title('fires')
+    plt.legend()
+    plt.show()
 
 The constituent ``Distribution`` objects are only defined within the range
 of :math:`x_{min}` and :math:`x_{max}`, but can be plotted in any subset of
@@ -135,16 +139,33 @@ approached. The PDF, in contrast, appears straight all way to :math:`x_{max}`.
 Because of this, PDFs are preferable when visualizing data with an :math:`x_{max}`,
 so as to not obscure the scaling.
 
-.. subfigure:: AB
+.. plot::
+    :caption: PDF (left) and CCDF (right) for the ``fires`` dataset within the specified scaling range ``[1e1, 1e4]`` and over the whole data range. The curvature of the CCDF changes when cropped, but that of the PDF remains the same.
+    :filename-prefix: fires_pdf_ccdf_cropped
+    :include-source: False
 
-    .. image:: ../images/words_pdf_cropped.png
+    import powerlaw
+    import matplotlib.pyplot as plt
 
-    .. image:: ../images/words_ccdf_cropped.png
+    xmin = 10
+    xmax = 1e4
 
-    PDF (left) and CCDF (right) for the ``words`` dataset within the
-    specified scaling range ``[1e1, 1e4]`` and over the whole data range.
-    The curvature of the CCDF changes when cropped, but that of the PDF remains
-    the same.
+    data = powerlaw.load_test_dataset('fires')
+    fit = powerlaw.Fit(data, xmin=xmin, xmax=xmax)
+
+    fig, ax = plt.subplots(1, 2, figsize=(9, 4))
+
+    fit.plot_pdf(label='Cropped PDF', ax=ax[0])
+    fit.plot_pdf(original_data=True, label='Full PDF', ax=ax[0])
+    ax[0].legend()
+
+    fit.plot_ccdf(label='Cropped CCDF', ax=ax[1])
+    fit.plot_ccdf(original_data=True, label='Full CCDF', ax=ax[1])
+    ax[1].legend()
+    
+    fig.suptitle('fires')
+    fig.tight_layout()
+    plt.show()
 
 References
 ----------

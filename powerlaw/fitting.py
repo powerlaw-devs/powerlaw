@@ -276,10 +276,8 @@ class Fit(object):
         Darling. For more information on these, see the documentation
         for ``Distribution.compute_distance_metrics()``.
 
-    xmin_distribution : {'power_law'}, optional
+    xmin_distribution : str name of distribution (eg. 'power_law'), optional
         The distribution to use in finding the optimal ``xmin`` value.
-
-        Currently, only ``'power_law'`` is supported.
 
     test_all_xmin : bool
         Whether to test every single unique value in the dataset for fitting

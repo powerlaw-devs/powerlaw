@@ -26,12 +26,8 @@ jobs:
       - uses: actions/setup-python@v5
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme myst_parser furo sphinx_subfigure numpydoc
+          pip install sphinx sphinx_rtd_theme myst_parser furo sphinx_subfigure numpydoc sphinx-exec-code
           pip install -e .
-
-      - name: Generate documentation figures
-        run: |
-          python docs/documentation_figures.py
 
       - name: Sphinx build
         run: |
